@@ -1,0 +1,61 @@
+import keyboard
+from abc import ABC, abstractmethod
+
+class KeyboardListener(ABC):
+
+    @abstractmethod
+    def on_key_action(self, key: str):
+        pass
+
+
+class KeyLogger(KeyboardListener):
+
+    def on_key_action(self, key: str):
+        print(f"Натиснуто клавішу: {key}")
+
+
+class KeyFileLogger(KeyboardListener):
+
+    def __init__(self, filename="keystrokes.txt"):
+        self.filename = filename
+
+    def on_key_action(self, key: str):
+        with open(self.filename, "a", encoding="utf-8") as file:
+            file.write(f"{key}\n")
+
+
+class KeyboardSpy:
+
+    def __init__(self):
+        self._listeners = []
+
+    def register_listener(self, listener: KeyboardListener):
+        self._listeners.append(listener)
+
+    def notify_listeners(self, key: str):
+        for listener in self._listeners:
+            listener.on_key_action(key)
+
+    def main(self):
+        while True:
+            try:
+                key = keyboard.read_key()
+                if keyboard.is_pressed("ctrl") and key == "q":
+                    print('Finished!')
+                    break
+
+                self.notify_listeners(key)
+            except:
+                break
+
+
+if __name__ == "__main__":
+    keyboardSpy = KeyboardSpy()
+
+    console_logger = KeyLogger()
+    file_logger = KeyFileLogger("keystrokes.txt")
+
+    keyboardSpy.register_listener(console_logger)
+    keyboardSpy.register_listener(file_logger)
+
+    keyboardSpy.main()
